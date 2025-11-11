@@ -1,0 +1,4 @@
+date,city,temperature,temperature_f,humidity,pressure,weather,wind_speed,datetime
+2025-11-02,Paris,12.44,54.391999999999996,90,1013,broken clouds,5.14,2025-11-02 00:24:31.366721
+2025-11-02,Arrondissement de Lyon,10.22,50.396,95,1016,moderate rain,0.95,2025-11-02 00:24:32.453049
+2025-11-02,Arrondissement de Marseille,16.82,62.275999999999996,86,1016,broken clouds,1.79,2025-11-02 00:24:33.542659
