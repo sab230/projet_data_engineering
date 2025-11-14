@@ -13,7 +13,7 @@ ENV/
 
 # Credentials
 .env
-
+.env.example
 # dbt artifacts
 target/
 dbt_packages/
