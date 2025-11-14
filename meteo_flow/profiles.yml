@@ -1,0 +1,14 @@
+meteo_flow:
+  target: dev
+  outputs:
+    dev:
+      type: snowflake
+      account: itfbjcx-UQB24799
+      user: SABRINAPAUVADAY78
+      password: JLvAv43x84zcMfD
+      role: ACCOUNTADMIN
+      database: WEATHER_DB
+      warehouse: WH_DE
+      schema: ANALYTICS
+      threads: 4
+      client_session_keep_alive: False

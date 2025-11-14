@@ -1,26 +1,104 @@
-version: '3'
-x-airflow-common:
-  &airflow-common
-  image: apache/airflow:2.8.1
-  environment:
-    - AIRFLOW__CORE__EXECUTOR=LocalExecutor
-    - AIRFLOW__CORE__SQL_ALCHEMY_CONN=sqlite:////opt/airflow/airflow.db
-    - AIRFLOW__CORE__LOAD_EXAMPLES=False
-  volumes:
-    - ./dags:/opt/airflow/dags
-    - ./logs:/opt/airflow/logs
-    - ./plugins:/opt/airflow/plugins
-  user: "${AIRFLOW_UID:-50000}:0"
+version: "3.9"
 
 services:
+
+  # ----------------------------
+  # POSTGRES FOR AIRFLOW
+  # ----------------------------
+  airflow-postgres:
+    image: postgres:13
+    environment:
+      POSTGRES_USER: airflow
+      POSTGRES_PASSWORD: airflow
+      POSTGRES_DB: airflow
+    volumes:
+      - airflow-db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U airflow"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # ----------------------------
+  # AIRFLOW INIT
+  # ----------------------------
+  airflow-init:
+    image: apache/airflow:2.8.1
+    depends_on:
+      - airflow-postgres
+    environment:
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@airflow-postgres/airflow
+      AIRFLOW__CORE__LOAD_EXAMPLES: "false"
+    entrypoint: ["/bin/bash", "-c"]
+    command:
+      - airflow db init &&
+        airflow users create --username admin --password admin --firstname Sabrina --lastname Admin --role Admin --email admin@example.com
+    volumes:
+      - ../dags:/opt/airflow/dags
+      - ../etl:/opt/airflow/etl
+      - ../data:/opt/airflow/data
+
+  # ----------------------------
+  # AIRFLOW WEBSERVER
+  # ----------------------------
   airflow-webserver:
-    <<: *airflow-common
-    command: webserver
+    image: apache/airflow:2.8.1
+    depends_on:
+      - airflow-init
+    environment:
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@airflow-postgres/airflow
     ports:
       - "8080:8080"
-    depends_on:
-      - airflow-scheduler
+    command: webserver
+    volumes:
+      - ../dags:/opt/airflow/dags
+      - ../etl:/opt/airflow/etl
+      - ../data:/opt/airflow/data
 
+  # ----------------------------
+  # AIRFLOW SCHEDULER
+  # ----------------------------
   airflow-scheduler:
-    <<: *airflow-common
+    image: apache/airflow:2.8.1
+    depends_on:
+      - airflow-init
+    environment:
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@airflow-postgres/airflow
     command: scheduler
+    volumes:
+      - ../dags:/opt/airflow/dags
+      - ../etl:/opt/airflow/etl
+      - ../data:/opt/airflow/data
+
+  # ----------------------------
+  # POSTGRES FOR GRAFANA
+  # ----------------------------
+  grafana-postgres:
+    image: postgres:13
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: admin
+      POSTGRES_DB: grafana
+    ports:
+      - "5433:5432"
+    volumes:
+      - grafana-db:/var/lib/postgresql/data
+
+  # ----------------------------
+  # GRAFANA
+  # ----------------------------
+  grafana:
+    image: grafana/grafana
+    depends_on:
+      - grafana-postgres
+    ports:
+      - "3030:3000"
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: admin
+    volumes:
+      - grafana-storage:/var/lib/grafana
+
+volumes:
+  airflow-db:
+  grafana-db:
+  grafana-storage:
