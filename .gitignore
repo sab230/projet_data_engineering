@@ -1,1 +1,22 @@
+# Python
+__pycache__/
+*.pyc
+
+# Airflow
+airflow/logs/
+airflow/logs/*
+
+# Environnements virtuels
+.venv/
+venv/
+ENV/
+
+# Credentials
 .env
+
+# dbt artifacts
+target/
+dbt_packages/
+
+# VSCode
+.vscode/
