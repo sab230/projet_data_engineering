@@ -1,114 +1,74 @@
-🌦️ MétéoFlow — Pipeline de données complet (Airflow, Snowflake, dbt, Grafana)
+# 🌦️ MétéoFlow
 
-MétéoFlow est un projet complet de Data Engineering permettant de :
+[![Status Build](https://img.shields.io/badge/Pipeline-Stable-brightgreen)](http://localhost:8080)
+[![Technologies](https://img.shields.io/badge/Stack-Airflow%20%7C%20Snowflake%20%7C%20dbt-blue)]()
+[![Licence](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE.md)
 
-Extraire des données météo depuis l’API OpenWeather
+**MétéoFlow** est un pipeline complet de *Data Engineering* conçu pour collecter, transformer, stocker et visualiser des données météorologiques **en temps réel**. Il s’appuie sur une architecture moderne utilisant **Airflow** pour l'orchestration et **Snowflake** comme Data Warehouse.
 
-Transformer et nettoyer les données
+---
 
-Charger les données dans Snowflake
+## 🧭 Table des Matières
 
-Automatiser le pipeline complet avec Airflow
+* [🎯 Objectifs du Projet](#-objectifs-du-projet)
+* [🏗️ Architecture Globale](#️-architecture-globale)
+* [🚀 Pour Commencer](#-pour-commencer)
+* [⚙️ Installation (Docker)](#️-installation-docker)
+* [▶️ Démarrage](#️-démarrage)
+* [🛠️ Fabriqué avec](#️-fabriqué-avec)
+* [✒️ Auteurs & Contact](#️-auteurs--contact)
+* [⚖️ Licence](#️-licence)
 
-Modéliser les données avec dbt
+---
 
-Visualiser les métriques météo dans Grafana
+## 🎯 Objectifs du Projet
 
-Surveiller l’exécution du pipeline
+Le pipeline a été conçu pour :
 
-Ce projet présente une architecture moderne, réaliste, et conçue pour un usage professionnel.
+* Collecter automatiquement des données météo depuis l'***API OpenWeather***.
+* Orchestrer l'ensemble du workflow **ETL** avec **Airflow**.
+* Stocker les données historisées dans **Snowflake**.
+* Modéliser les données analytiques avec **dbt**.
+* Exposer les métriques en *temps réel* dans un dashboard **Grafana**.
 
-📁 Architecture du projet
-projet_data_engineering/
-│
-├── airflow/
-│   ├── dags/
-│   │   └── weather_etl_dag.py
-│   ├── etl/
-│   │   ├── extract.py
-│   │   ├── transform.py
-│   │   └── load.py
-│   ├── logs/
-│   └── docker-compose.yml
-│
-├── data/
-│   ├── raw/
-│   └── processed/
-│       └── weather_multi_clean.csv
-│
-├── meteo_flow/   (projet dbt)
-│
-└── README.md
+---
 
-🚀 Fonctionnalités
-🔹 1. Extraction
+## 🏗️ Architecture Globale
 
-Récupération de données météo via l’API OpenWeather (format JSON)
+Le flux de données est géré par un DAG Airflow qui pilote les transformations Python et dbt :
 
-Multi-villes possible
+> OpenWeather API → **Airflow** → ETL Python → **Snowflake** (RAW → STAGING → ANALYTICS) → **PostgreSQL** → **Grafana**
 
-Enregistrement dans /data/raw/
+### Schéma Logique
 
-🔹 2. Transformation
+| Composant | Rôle |
+| :--- | :--- |
+| **Airflow** | **Orchestration** des tâches (Extract, Transform, Load, Model). |
+| **Snowflake** | **Data Warehouse** Cloud central. |
+| **dbt** | Modélisation des données SQL et création des tables BI. |
+| **Grafana** | Visualisation et Dashboards métier. |
 
-Nettoyage des données (types, formats, colonnes)
+---
 
-Normalisation des unités (°C → °F)
+## 🚀 Pour Commencer
 
-Enregistrement dans /data/processed/
+Ce projet nécessite **Docker** et **Docker Compose** pour initialiser l'infrastructure complète. Vous aurez également besoin de vos credentials de services cloud.
 
-🔹 3. Chargement Snowflake
+### Pré-requis
 
-Création automatique de la table WEATHER_CURRENT
+* **Docker** et **Docker Compose** (vérifiez l'installation avec `docker --version`).
+* Une clé d'API valide pour **OpenWeatherMap**.
+* Des identifiants de connexion **Snowflake** (compte, utilisateur, mot de passe).
 
-Insertion massive via write_pandas
+### Gestion des Credentials (IMPORTANT)
 
-Gestion des schémas (RAW, STAGING, ANALYTICS)
+Vous devez créer un fichier nommé **`.env`** dans le dossier `/airflow` pour y placer les secrets. Ce fichier est ignoré par Git.
 
-🔹 4. Automatisation avec Airflow
+```bash
+# Exemple de contenu pour .env
+OPENWEATHER_API_KEY=votre_cle_api_secrete_ici
 
-Pipeline ETL complet dans un DAG :
-
-extract >> transform >> load
-
-
-Exécution quotidienne (@daily), logs consultables via l’interface web Airflow.
-
-🔹 5. Modélisation dbt
-
-Source : RAW.WEATHER_CURRENT
-
-Modèle staging : STG_WEATHER_CURRENT
-
-Agrégations métriques dans ANALYTICS.WEATHER_METRICS
-
-Documentation automatique dbt
-
-🔹 6. Visualisation Grafana / PostgreSQL
-
-Les métriques agrégées sont exportées vers PostgreSQL
-
-Grafana se connecte à PostgreSQL pour afficher :
-
-Températures moyennes par ville
-
-Variation d’humidité
-
-Évolution du vent
-
-État du ciel (Sunny, Rain, Cloudy…)
-
-🐳 Lancer tout le projet avec Docker Compose
-
-Depuis le dossier /airflow :
-
-docker compose up --build
-
-
-Ce qui démarre automatiquement :
-
-✔ Airflow Scheduler
-✔ Airflow Webserver
-✔ Airflow Postgres
-✔ Grafana PostgreSQL
-✔ Grafana UI
+SNOWFLAKE_ACCOUNT=votre_compte
+SNOWFLAKE_USER=votre_user
+SNOWFLAKE_PASSWORD=votre_mot_de_passe
+# ... autres variables DB et POSTGRES
